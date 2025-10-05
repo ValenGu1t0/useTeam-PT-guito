@@ -67,3 +67,86 @@ El tipado que se me ocurrió para esta coleccion sería:
   createdAt: Date
 }
 
+------------------------------------------------------------------------------------------------------------------
+
+## Diseño NestJS + WebSocket
+
+Acá me voy a encargar de:
+
+- Módulo TasksModule → CRUD de tareas. 
+
+- Módulo ColumnsModule → manejo de columnas.
+
+- Gateway → canal WebSocket para sincronizar cambios entre clientes (cuando una tarea se crea, mueve o edita).
+
+Creé e instalé los archivos iniciales con nest CLI. Luego, cree dentro de /src las subcarpetas:
+
+- modules/ → cada módulo tendrá su controlador, servicio y módulo propio (task.module.ts, columns y boards).
+
+- schemas/ → los modelos Mongoose (task.schema.ts, column.schema.ts, board.schema.ts).
+
+- gateways/ → acá pondremos el WebSocket Gateway, donde manejarás los eventos en tiempo real.
+
+------------------------------------------------------------------------------------------------------------------
+
+## Schemas
+
+Lo primero que realicé una vez arme la base del backend fue definir los schemas. 
+
+- task.schema.ts:
+
+Usamos @Schema() para generar el modelo automáticamente.
+El decorador @Prop() define cada campo.
+timestamps: true crea los campos createdAt y updatedAt automáticamente.
+
+
+El ícono rojo (módulo) indica un archivo principal o decorador @Module, mientras que el amarillo (service) es un servicio (@Injectable), ambos distintos roles en Nest.
+
+En app.module.ts, lo que agregamos al final en imports son módulos de la aplicación, no variables de entorno. Ahí registramos los módulos (como TaskModule) y la conexión con Mongo.
+
+Resumen rápido de cada cosa:
+
+Schema: define la estructura de los datos en MongoDB.
+
+Service: contiene la lógica (consultas a la base, creación, etc.).
+
+Controller: expone rutas HTTP (GET, POST, etc.).
+
+Module: agrupa schema, service y controller en una sola unidad reutilizable.
+
+
+
+npm run start:dev
+
+
+Despues del commit tasks de backend, el CRUD funciona perfecto:
+
+GET    http://localhost:3000/tasks
+POST   http://localhost:3000/tasks
+PUT    http://localhost:3000/tasks/:id
+DELETE http://localhost:3000/tasks/:id
+
+
+Configuramos el entorno NestJS
+
+Instalaste dependencias, configuraste el backend y verificaste que compile correctamente.
+
+Agregamos soporte para variables de entorno con @nestjs/config y .env.
+
+Conectamos MongoDB con Mongoose
+
+Definiste MONGODB_URI en tu .env y lo cargamos correctamente con ConfigModule.
+
+Nest ahora se conecta a tu base de datos Mongo sin errores.
+
+Módulo de Tasks
+
+Ya existe un módulo TaskModule que expone endpoints REST (GET, POST, PUT, DELETE).
+
+Lo verificaste con Postman:
+
+✅ GET devuelve 200 (lectura exitosa).
+
+⚠️ PUT devuelve 500 (posiblemente por validación o id inexistente, que revisaremos).
+
+Esto confirma que el módulo y el controlador funcionan correctamente y la conexión a Mongo está activa.
