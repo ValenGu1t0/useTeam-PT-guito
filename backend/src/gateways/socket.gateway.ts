@@ -1,34 +1,43 @@
 import {
   WebSocketGateway,
-  SubscribeMessage,
-  MessageBody,
   WebSocketServer,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
-import { TaskService } from '../modules/tasks/task.service';
 
-@WebSocketGateway({ cors: true })
-export class TaskGateway {
+@WebSocketGateway({
+  cors: {
+    origin: '*', // permitimos las cross para dev
+  },
+})
+export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly taskService: TaskService) {}
+  handleConnection(client: any) {
+    console.log('Cliente conectado:', client.id);
+  }
 
-  @SubscribeMessage('createTask')
-  async handleCreate(@MessageBody() payload) {
-    const task = await this.taskService.create(payload);
+  handleDisconnect(client: any) {
+    console.log('Cliente desconectado:', client.id);
+  }
+
+  // Tareas
+  taskCreated(task: any) {
     this.server.emit('taskCreated', task);
   }
 
-  @SubscribeMessage('updateTask')
-  async handleUpdate(@MessageBody() payload) {
-    const updated = await this.taskService.update(payload.id, payload.data);
-    this.server.emit('taskUpdated', updated);
+  taskUpdated(task: any) {
+    this.server.emit('taskUpdated', task);
   }
 
-  @SubscribeMessage('deleteTask')
-  async handleDelete(@MessageBody() id: string) {
-    await this.taskService.delete(id);
+  taskDeleted(id: string) {
     this.server.emit('taskDeleted', id);
+  }
+
+  // Columnas
+  columnUpdated(column: any) {
+    this.server.emit('columnUpdated', column);
   }
 }

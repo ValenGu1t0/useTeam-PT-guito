@@ -20,7 +20,7 @@ export class TaskController {
   }
 
   @Post()
-  async create(@Body() body: any): Promise<Task> {
+  async create(@Body() body: Partial<Task>) {
     return this.taskService.create(body);
   }
 
