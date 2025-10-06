@@ -3,6 +3,7 @@ import { Roboto } from "next/font/google";
 import "./globals.css";
 import { ReactQueryClientProvider } from "@/providers/ReactQueryClientProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
+import { Toaster } from 'sonner';
 import { cn } from "@/lib/utils";
 
 const roboto = Roboto({
@@ -34,7 +35,8 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <ReactQueryClientProvider>
-            {children}
+              {children}
+              <Toaster richColors />
           </ReactQueryClientProvider>
         </ThemeProvider>
       </body>

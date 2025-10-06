@@ -26,10 +26,3 @@ export interface Board {
   columns?: Column[];
   createdAt: string;
 }
-
-/* En un futuro el tipado para el estado del socket
-export interface SocketEvent<T = any> {
-  type: string;
-  payload: T;
-}
-*/

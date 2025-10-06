@@ -51,7 +51,6 @@ export const createTask = async (payload: { title: string; description?: string;
 // PATCH Tasks (mover o actualizar una tarea)
 export const updateTask = async (taskId: string, payload: Partial<Task>) => {
   const { data } = await api.put(`/tasks/${taskId}`, payload);
-  console.log(payload)
   return data as Task;
 };
 
@@ -62,9 +61,7 @@ export const deleteTask = async (taskId: string) => {
 };
 
 /* -------------------------- MOVE TASK (Drag & Drop) -------------------------- */
-// Esto lo podés seguir usando para mover tareas entre columnas
 export const moveTask = async (taskId: string, payload: { columnId?: string; index?: number }) => {
-  console.log('PATCH /tasks/', taskId, payload); 
   const { data } = await api.put(`/tasks/${taskId}`, payload);
   return data as Task;
 };
