@@ -9,10 +9,14 @@ import {
 } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { Task } from '../../schemas/task.schema';
+import { SocketGateway } from '../../gateways/socket.gateway';
 
 @Controller('tasks')
 export class TaskController {
-  constructor(private readonly taskService: TaskService) {}
+  constructor(
+    private readonly taskService: TaskService,
+    private readonly socketGateway: SocketGateway,
+  ) {}
 
   @Get()
   async getAll(): Promise<Task[]> {
@@ -21,17 +25,22 @@ export class TaskController {
 
   @Post()
   async create(@Body() body: Partial<Task>) {
-    return this.taskService.create(body);
+    const task = await this.taskService.create(body);
+    this.socketGateway.taskCreated(task);
+    return task;
   }
 
   @Put(':id')
   async update(@Param('id') id: string, @Body() body: Partial<Task>): Promise<Task | null> {
-    return this.taskService.update(id, body);
+    const task = await this.taskService.update(id, body);
+    if (task) this.socketGateway.taskUpdated(task); 
+    return task;
   }
 
   @Delete(':id')
-  delete(@Param('id') id: string): Promise<Task | null> {
-    return this.taskService.delete(id);
+  async delete(@Param('id') id: string): Promise<Task | null> {
+    const deleted = await this.taskService.delete(id);
+    if (deleted) this.socketGateway.taskDeleted(id); 
+    return deleted;
   }
-
 }
