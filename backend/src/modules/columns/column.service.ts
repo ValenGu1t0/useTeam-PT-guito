@@ -25,7 +25,7 @@ export class ColumnService {
     const tasks = await this.taskModel.find().sort({ createdAt: 1 }).lean();
 
     const result = columns.map((column) => {
-      const columnId = (column._id as any).toString(); // 👈 conversión explícita
+      const columnId = (column._id as any).toString();
       const columnTasks = tasks.filter(
         (task) => task.columnId?.toString() === columnId,
       );

@@ -13,7 +13,7 @@ export class ColumnController {
   @Post()
   async create(@Body() body: Partial<Column>) {
     const column = await this.columnService.create(body);
-    this.socketGateway.columnUpdated(column); // 🚀 notifica nueva columna
+    this.socketGateway.columnCreated(column);
     return column;
   }
 
@@ -30,14 +30,14 @@ export class ColumnController {
   @Put(':id')
   async update(@Param('id') id: string, @Body() body: Partial<Column>) {
     const column = await this.columnService.update(id, body);
-    if (column) this.socketGateway.columnUpdated(column); // 🚀 notifica edición
+    if (column) this.socketGateway.columnUpdated(column);
     return column;
   }
 
   @Delete(':id')
   async delete(@Param('id') id: string) {
     const deleted = await this.columnService.delete(id);
-    if (deleted) this.socketGateway.columnUpdated({ deleted: id }); // podrías emitir un evento específico si querés
+    if (deleted) this.socketGateway.columnDeleted(id);
     return deleted;
   }
 }

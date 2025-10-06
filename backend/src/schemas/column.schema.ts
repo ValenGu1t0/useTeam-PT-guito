@@ -13,13 +13,11 @@ export class Column extends Document {
   @Prop({ type: Types.ObjectId, ref: 'Board' })
   boardId: Types.ObjectId;
 
-  // 👇 Agregamos el campo virtual para que TypeScript lo reconozca
   tasks?: Task[];
 }
 
 export const ColumnSchema = SchemaFactory.createForClass(Column);
 
-// 🔗 Relación virtual: una columna tiene muchas tareas
 ColumnSchema.virtual('tasks', {
   ref: 'Task',
   localField: '_id',

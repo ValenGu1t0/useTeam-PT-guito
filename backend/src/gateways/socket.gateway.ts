@@ -7,9 +7,7 @@ import {
 import { Server } from 'socket.io';
 
 @WebSocketGateway({
-  cors: {
-    origin: '*', // permitimos las cross para dev
-  },
+  cors: { origin: '*' },
 })
 export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -23,7 +21,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log('Cliente desconectado:', client.id);
   }
 
-  // Tareas
+  // --- Tasks ---
   taskCreated(task: any) {
     this.server.emit('taskCreated', task);
   }
@@ -36,8 +34,16 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server.emit('taskDeleted', id);
   }
 
-  // Columnas
+  // --- Columns ---
+  columnCreated(column: any) {
+    this.server.emit('columnCreated', column);
+  }
+
   columnUpdated(column: any) {
     this.server.emit('columnUpdated', column);
+  }
+
+  columnDeleted(id: string) {
+    this.server.emit('columnDeleted', id);
   }
 }
