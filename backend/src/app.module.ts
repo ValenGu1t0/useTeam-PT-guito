@@ -7,11 +7,13 @@ import { ColumnModule } from './modules/columns/column.module';
 import { BoardModule } from './modules/boards/board.module';
 import { SocketGateway } from './gateways/socket.gateway';
 import { ConfigModule } from '@nestjs/config';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forRoot(process.env.MONGODB_URI!),
+    HttpModule, 
     TaskModule,
     ColumnModule,
     BoardModule,
