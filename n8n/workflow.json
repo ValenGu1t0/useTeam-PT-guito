@@ -1,0 +1,279 @@
+{
+  "name": "PT guito",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "http://localhost:3000/columns",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "425592ea-812f-4f12-9b42-40a6584e8f3a",
+      "name": "GET Data del Back"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "export-backlog",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        176,
+        240
+      ],
+      "id": "a2961b9b-01f1-43f4-9f59-281f89b61f5f",
+      "name": "Trigger Inicial",
+      "webhookId": "280ce3b4-af36-4c53-8962-49c9fa76d9cb"
+    },
+    {
+      "parameters": {
+        "jsCode": "const outputTasks = [];\n\n// 'items' debería estar disponible en el scope global del script del nodo Code\n// Es un array de objetos, donde cada objeto representa un item de entrada.\nfor (const item of items) {\n    const column = item.json; // Accede al JSON de este item (que es tu objeto de columna)\n\n    // Verificaciones de depuración\n    // console.log(\"Processing item (column):\", column.name);\n\n    if (column.tasks && Array.isArray(column.tasks)) {\n        // console.log(\"Column has tasks. Number of tasks:\", column.tasks.length);\n        for (const task of column.tasks) {\n            outputTasks.push({\n                json: { // Cada tarea se convierte en un nuevo item JSON\n                    id: task._id,\n                    title: task.title,\n                    description: task.description,\n                    column: column.name,\n                    createdAt: task.createdAt\n                }\n            });\n        }\n    } else {\n         // console.warn(\"Column has no tasks or tasks is not an array:\", column.name);\n    }\n}\n\n// Devuelve el array de items procesados.\n// Cada elemento de este array se convertirá en un item de salida.\nreturn outputTasks;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "875385d7-e137-4411-adc5-c2a090a7cebb",
+      "name": "Procesado de Tasks"
+    },
+    {
+      "parameters": {
+        "options": {
+          "delimiter": ",",
+          "fileName": "backlog_report.csv",
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "452a0a5d-6d5e-42ec-8992-09ecca7db960",
+      "name": "Conversión a CSV"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        832,
+        0
+      ],
+      "id": "8b549728-13c3-4775-9d1f-970c74eebb32",
+      "name": "Merge - CSV + Email"
+    },
+    {
+      "parameters": {
+        "fromEmail": "devalen546@gmail.com",
+        "toEmail": "={{$json[\"body\"][\"email\"]}}",
+        "subject": "Backlog de Tareas de tu Board",
+        "html": "<p>Hola Valentino!</p>\n<p>Adjunto encontrarás el archivo CSV con todas las tareas exportadas desde tu tablero Kanban, como solicitaste.</p>\n<p>¡Saludos!</p>",
+        "options": {
+          "attachments": "data"
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "b189cd92-4d93-4319-8254-fb3a199f39c2",
+      "name": "Envío del backlog",
+      "webhookId": "1be9ea01-a43b-4f25-a96c-64dfab2ff79a",
+      "credentials": {
+        "smtp": {
+          "id": "i7oAqiTG44dljkIm",
+          "name": "EmailGuito"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3000/export/confirm",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"success\": true,\n  \"email\": \"={{ $json['accepted'] ? $json['accepted'][0] : ($json['body'] ? $json['body'].email : null) }}\",\n  \"details\": \"CSV enviado correctamente al destinatario.\"\n}\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1408,
+        96
+      ],
+      "id": "949645d1-e809-4418-a6e1-d051f599c9c8",
+      "name": "Confirmación Mail"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3000/export/confirm",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"success\": false,\n  \"email\": \"={{ $json['body'] ? $json['body'].email : ($json['accepted'] ? $json['accepted'][0] : null) }}\",\n  \"details\": \"={{ $json['message'] || $json['error'] || 'Error al enviar correo' }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1408,
+        -112
+      ],
+      "id": "6a4dc60b-aaa0-4450-a6d0-b5d9e6196855",
+      "name": "Email Error"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "569ff2b4-cd39-4a02-808b-4139460b78b5",
+              "leftValue": "={{ $json[\"rejected\"].length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1200,
+        0
+      ],
+      "id": "0d4f6a97-b844-4759-bd2d-fb9f83c8dad8",
+      "name": "If (rejected > 0)"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "GET Data del Back": {
+      "main": [
+        [
+          {
+            "node": "Procesado de Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Inicial": {
+      "main": [
+        [
+          {
+            "node": "GET Data del Back",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge - CSV + Email",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Procesado de Tasks": {
+      "main": [
+        [
+          {
+            "node": "Conversión a CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversión a CSV": {
+      "main": [
+        [
+          {
+            "node": "Merge - CSV + Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge - CSV + Email": {
+      "main": [
+        [
+          {
+            "node": "Envío del backlog",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envío del backlog": {
+      "main": [
+        [
+          {
+            "node": "If (rejected > 0)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If (rejected > 0)": {
+      "main": [
+        [
+          {
+            "node": "Email Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Confirmación Mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ec4f6b7f-fb47-457a-955d-9bd2996ecfda",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "00cffd54b1c77ecd9e55c7cc28958c26c175ec08ffb0880338f5672bb001faef"
+  },
+  "id": "wyJZcT4dtafHylEY",
+  "tags": []
+}

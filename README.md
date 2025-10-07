@@ -1,192 +1,153 @@
-# :test_tube: Prueba Técnica – Tablero Kanban Colaborativo en Tiempo Real
 
-## :dart: Objetivo
+# Kanban Board – Prueba Técnica Full Stack - Privitera, Valentino
 
-Desarrollar una aplicación tipo **Trello** que permita la gestión de tareas mediante un **tablero Kanban** con soporte para **colaboración en tiempo real**. El sistema debe incluir columnas personalizables, tarjetas movibles y funcionalidad de drag & drop fluida.
+Proyecto Full Stack desarrollado con **Next.js + Tailwind + TypeScript** en el frontend,  
+y **NestJS + MongoDB + Socket.IO** en el backend.
+
+Incluye un flujo de automatización con **n8n**, que permite exportar las tareas (`backlog`) del tablero como un archivo CSV y enviarlo automáticamente por correo electrónico a una cuenta de email de preferencia.
 
 ---
 
-## :gear: Tecnologías Requeridas
+## Tecnologías principales
 
 ### Frontend
-
-- **React.js** para la construcción de la interfaz.
-- Implementación de **drag & drop** para mover tarjetas entre columnas.
+- [Next.js](https://nextjs.org/)
+- [TailwindCSS](https://tailwindcss.com/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Axios](https://axios-http.com/)
+- [Socket.IO Client](https://socket.io/)
+- [@tanstack/react-query](https://tanstack.com/query)
+- [@hello-pangea/dnd](https://github.com/hello-pangea/dnd)
+- [shadcn/ui](https://ui.shadcn.com/)
 
 ### Backend
+- [NestJS](https://nestjs.com/)
+- [Mongoose](https://mongoosejs.com/)
+- [Socket.IO](https://socket.io/)
+- [Axios](https://axios-http.com/)
 
-- **NestJS** con soporte de **WebSocket** para simular la colaboración en tiempo real.
-- Uso de **MongoDB** para el almacenamiento de datos.
-- Implementación de **Socket.io** para comunicación bidireccional.
-- **Notificaciones en tiempo real** para reflejar los cambios realizados por otros usuarios.
-
----
-
-## :mailbox: Funcionalidad Adicional Requerida
-
-### Exportación de Backlog vía Email en CSV
-
-Implementar un sistema de exportación automatizada del backlog del tablero Kanban utilizando **N8N** para generar flujos de trabajo automatizados.
-
-#### :gear: Tecnologías Adicionales
-
-- **N8N** para automatización de flujos de trabajo
-- **Webhooks** para comunicación entre sistemas
-- **CSV Generation** para estructuración de datos
-- **Email Service** para envío de reportes
-
-#### :dart: Requisitos de la Funcionalidad
-
-1. **Trigger desde Frontend**: Botón de exportación en la interfaz del tablero
-2. **Endpoint de Exportación**: API en NestJS que dispare el flujo N8N
-3. **Flujo N8N Automatizado**:
-   - Extracción de datos del tablero Kanban
-   - Estructuración de datos en formato CSV
-   - Envío automático por email
-4. **Configuración de Exportación**:
-   - Email destino configurable
-   - Selección de campos a exportar (Opcional)
-5. **Notificaciones de Estado**:
-   - Confirmación de solicitud de exportación
-   - Notificación de envío exitoso/fallido
-
-#### :file_folder: Estructura del CSV de Exportación
-
-El archivo CSV exportado debe incluir:
-
-- **ID de tarea** (identificador único)
-- **Título** (nombre de la tarea)
-- **Descripción** (detalles de la tarea)
-- **Columna** (posición actual en el tablero)
-- **Fecha de creación** (timestamp de creación)
-
-#### :arrow_forward: Flujo de Trabajo
-
-```
-[Frontend] → [NestJS API] → [N8N Webhook] → [Data Extraction] → [CSV Generation] → [Email Delivery] → [User Notification]
-```
-
-1. Usuario hace clic en "Exportar Backlog"
-2. Frontend envía solicitud a endpoint `/api/export/backlog`
-3. NestJS dispara webhook a N8N
-4. N8N extrae datos del tablero Kanban
-5. N8N estructura datos en formato CSV
-6. N8N envía email con archivo CSV adjunto
-7. Sistema notifica al usuario el estado de la exportación
+### Automatización
+- [n8n](https://n8n.io/) – Para automatizar la exportación y envío del backlog por correo electrónico.
 
 ---
 
-## :package: Forma de Entrega
+## Requisitos previos
 
-### :fork_and_knife: Fork del Repositorio
+- Tener conexión a internet 
+- Tener ganas de contratar a un crack
+- Y buen sentido del humor
 
-1. **Fork** este repositorio a tu cuenta de GitHub
-2. **Clona** tu fork localmente
-3. **Desarrolla** la solución completa en tu fork
-4. **Sube** todos los cambios a tu repositorio
+AHORA SI! Fuera de joda.. se deben tene instalados los siguientes programas en la máquina local:
 
-### :file_folder: Estructura de Archivos Requerida
+- **Node.js v18 o superior**
+- **npm** (se instala junto con Node)
+- **MongoDB** instalado y CORRIENDO (Abrirlo antes de ejecutar nada) (por ejemplo en `mongodb://localhost:27017`)
+- **n8n** instalado globalmente: `npm install -g n8n`
+
+Cabe destacar que no es necesario importar datos: la base de datos kanban-board se genera automáticamente al crear columnas y tareas desde el frontend.
+
+---
+
+### Descargar el proyecto
+
+Para traer este proyecto a tu máquina, tan solo ejecuta este comando en la terminal de tu escritorio, por ejemplo.
 
 ```
-useTeam-PT/
-├── README.md
-├── .env.example
-├── frontend/
-│   ├── package.json
-│   ├── src/
-│   └── ...
-├── backend/
-│   ├── package.json
-│   ├── src/
-│   └── ...
-├── n8n/
-│   ├── workflow.json
-│   └── setup-instructions.md
-└── docker-compose.yml (Opcional)
+git clone https://github.com/usuario/kanban-board.git
+cd kanban-board
+ls -> mostrará el contenido de carpetas y archivos del mismo
 ```
 
-### :gear: Archivos de Configuración
+Ahora, deberás crear un .env en cada carpeta (/frontend y /backend), el contenido de cada uno esta especificado en el .env.example del repositorio. Copia el contenido del archivo tanto en el frontend como en el backend y completa / complementa los valores necesarios.
 
-#### `.env.example`
+En mi caso, al usar next.js y nest.js, mongo y n8n, el contenido es exactamemte este (te recomiendo copiar y pegar directamente).
 
-Debe incluir todas las variables de entorno necesarias:
-
-```env examle
-# Database
+- Backend (/backend/.env)
 MONGODB_URI=mongodb://localhost:27017/kanban-board
-
-# Backend
 PORT=3000
 N8N_WEBHOOK_URL=http://localhost:5678/webhook/kanban-export
 
-# Frontend
-REACT_APP_API_URL=http://localhost:3000/api
-REACT_APP_WS_URL=ws://localhost:3000
+- Frontend (/frontend/.env)
+NEXT_PUBLIC_API_URL=http://localhost:3000
+NEXT_PUBLIC_WS_URL=http://localhost:3000
+
+
+**Si usas otra variable de entorno distinta (por ejemplo REACT_APP_), reemplázala por NEXT_PUBLIC_ para exponerla correctamente en Next.js**. 
+
+---
+
+### Instalar dependencias
+
+Ejecuta este comando dentro de cada carpeta (desde la terminal abierta en la raíz del proyecto):
+
+```
+cd backend
+npm install
+
+cd ../frontend
+npm install
 ```
 
-#### `n8n/workflow.json`
+Cuando termine la instalación en cada carpeta, podremos comenzar a ejecutar todo. **RECOMIENDO fuertemente levantar el backend primero y luego el front**. Cada comando es para cada app correspondiente.
 
-Archivo JSON del flujo de N8N para exportación de backlog.
-
-#### `n8n/setup-instructions.md`
-
-Instrucciones detalladas para configurar y ejecutar el flujo N8N.
-
-### :whale: Docker Compose (Opcional)
-
-Incluir archivo `docker-compose.yml` con:
-
-- Servicio de MongoDB
-- Servicio de N8N (versión 1.106.3)
-- Configuración de redes y volúmenes
-
-### :rocket: Comando para N8N
-
-Comando para levantar una instancia local de N8N
-
-```bash
-docker run -it --rm \
-  --name n8n \
-  -p 5678:5678 \
-  -v ~/.n8n:/home/node/.n8n \
-  n8nio/n8n:latest
+```
+/backend -> npm run start:dev
+/frontend -> npm run dev
 ```
 
-### :memo: Documentación Adicional
+Para verificar que salió todo bien, entrá desde el navegador a 
 
-- **README.md** actualizado con instrucciones de instalación y ejecución
-- **Comentarios en código** explicando la lógica compleja
+- http://localhost:3001 -> Verás el tablero KanBan
 
-### :lock: Finalización de la Prueba
-
-Una vez finalizada la implementación:
-
-1. **Invitar** a los siguientes usuarios como colaboradores al repositorio:
-
-   - `rodriguezibrahin3@gmail.com`
-   - `jonnahuel78@gmail.com`
-   - `administracion@useteam.io`
-
-2. **NO realizar más commits** después de invitar a los usuarios
+- http://localhost:3000 -> Verás un mensaje "Estamos funcionando!"
 
 ---
 
-## :brain: Evaluación
+### Flujo de n8n (Exportar Backlog)
 
-Durante el desarrollo de esta prueba se evaluarán:
+El proyecto incluye un flujo de automatización (n8n/workflow.json) que:
 
-- **Pensamiento asincrónico** y manejo de procesos en tiempo real.
-- **Lógica compleja en el frontend**, especialmente en la interacción y estado compartido.
-- Gestión adecuada de **eventos y sincronización** entre múltiples usuarios.
+- Recibe el trigger desde el backend al hacer click en el botón de la esquina superior derecha del frontend.
+- Consulta las columnas y sus tareas en el backend y obtiene el JSON de estas.
+- Convierte el JSON a CSV.
+- Envía el CSV por correo electrónico usando SMTP hacia el correo que ingresemos desde el front.
+- Notifica al backend si el envío fue exitoso o fallido, que a su vez notifica al front.
+
+
+#### Configuración
+
+Inicia n8n en la terminal:
+
+`n8n`
+
+Luego, abre el panel en el navegador (http://localhost:5678) y registrate o ingresa con tu cuenta si ya tenes una.
+
+Importa el archivo `n8n/workflow.json` que esta en la carpeta /n8n de este proyecto.
+
+**IMPORTANTE** -> Tenes que configurar el nodo "Envio del Backlog" (Nodo con ICONO DE UN SOBRE DE EMAIL)
+
+- Proveedor: Gmail (u otro)
+- Usuario: tu correo electronico, será el que envíe el mail.
+- Contraseña: tu contraseña de aplicación (no la personal)
+- Guarda y activa el workflow.
+
+**El destinatario se completa automáticamente desde el frontend, no hace falta modificarlo.**
+
+Si hiciste todo correcto (y yo también explicando esto..) debería estar todo funcionando para que pruebes la aplicación. Crea algunas columnas, cambiales el nombre, asignales tareas, desplazalas entre columnas, organiza tu dia. Luego, cuando termines, si queres tener toda esta información en tu poder, tan solo exportala con el botón de arriba a la derecha, ingresa tu mail personal y listo, en unos segundo estará llegando el reporte en formato CSV.
+
+Para mas información podes leer el setup-instructions.md de la carpeta /n8n.
 
 ---
 
-## :pushpin: Recomendaciones
+### Notas finales
 
-- Enfócate en una buena experiencia de usuario (UX).
-- Prioriza un código limpio, modular y mantenible.
-- Usa comentarios breves y precisos donde la lógica sea compleja.
+- Este proyecto está diseñado para correr en entorno local.
 
----
+- Asegúrate de tener MongoDB activo antes de iniciar el backend. Corre primero el back y luego el front.
 
-¡Buena suerte! :rocket:
+- Corre n8n y registrate antes de ejectuar el export de tus datos del KanBan.
+
+- Las credenciales de correo deben configurarse por cada usuario.
+
+- No compartas contraseñas reales en el repositorio ni variables de entorno.
+
