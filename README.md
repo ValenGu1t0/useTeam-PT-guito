@@ -156,3 +156,6 @@ Para mas información podes leer el `setup-instructions.md` de la carpeta `/n8n`
 
 - No compartas contraseñas reales en el repositorio ni variables de entorno.
 
+---
+
+Saludos y gracias por su tiempo!
