@@ -34,7 +34,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server.emit('taskDeleted', id);
   }
 
-  // --- Columns ---
+  // --- Columnas ---
   columnCreated(column: any) {
     this.server.emit('columnCreated', column);
   }

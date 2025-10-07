@@ -53,24 +53,29 @@ Cabe destacar que no es necesario importar datos: la base de datos kanban-board 
 Para traer este proyecto a tu máquina, tan solo ejecuta este comando en la terminal de tu escritorio, por ejemplo.
 
 ```
-git clone https://github.com/usuario/kanban-board.git
-cd kanban-board
+git clone https://github.com/ValenGu1t0/useTeam-PT-guito.git
+cd useTeam-PT-guito
 ls -> mostrará el contenido de carpetas y archivos del mismo
 ```
 
-Ahora, deberás crear un .env en cada carpeta (/frontend y /backend), el contenido de cada uno esta especificado en el .env.example del repositorio. Copia el contenido del archivo tanto en el frontend como en el backend y completa / complementa los valores necesarios.
+Ahora, deberás crear un `.env` en cada carpeta (`/frontend` y `/backend`), el contenido de cada uno esta especificado en el `.env.example` de este repositorio. Copia el contenido del archivo tanto en el frontend como en el backend y completa o complementa los valores necesarios.
 
 En mi caso, al usar next.js y nest.js, mongo y n8n, el contenido es exactamemte este (te recomiendo copiar y pegar directamente).
 
-- Backend (/backend/.env)
+- Backend (`/backend/.env`)
+
+```
 MONGODB_URI=mongodb://localhost:27017/kanban-board
 PORT=3000
 N8N_WEBHOOK_URL=http://localhost:5678/webhook/kanban-export
+```
 
-- Frontend (/frontend/.env)
+- Frontend (`/frontend/.env`)
+
+```
 NEXT_PUBLIC_API_URL=http://localhost:3000
 NEXT_PUBLIC_WS_URL=http://localhost:3000
-
+```
 
 **Si usas otra variable de entorno distinta (por ejemplo REACT_APP_), reemplázala por NEXT_PUBLIC_ para exponerla correctamente en Next.js**. 
 
@@ -84,15 +89,15 @@ Ejecuta este comando dentro de cada carpeta (desde la terminal abierta en la ra�
 cd backend
 npm install
 
-cd ../frontend
+cd frontend
 npm install
 ```
 
 Cuando termine la instalación en cada carpeta, podremos comenzar a ejecutar todo. **RECOMIENDO fuertemente levantar el backend primero y luego el front**. Cada comando es para cada app correspondiente.
 
 ```
-/backend -> npm run start:dev
-/frontend -> npm run dev
+Para backend -> npm run start:dev
+Para frontend -> npm run dev
 ```
 
 Para verificar que salió todo bien, entrá desde el navegador a 
@@ -105,7 +110,7 @@ Para verificar que salió todo bien, entrá desde el navegador a
 
 ### Flujo de n8n (Exportar Backlog)
 
-El proyecto incluye un flujo de automatización (n8n/workflow.json) que:
+El proyecto incluye un flujo de automatización (`/n8n/workflow.json`) que:
 
 - Recibe el trigger desde el backend al hacer click en el botón de la esquina superior derecha del frontend.
 - Consulta las columnas y sus tareas en el backend y obtiene el JSON de estas.
@@ -116,15 +121,13 @@ El proyecto incluye un flujo de automatización (n8n/workflow.json) que:
 
 #### Configuración
 
-Inicia n8n en la terminal:
-
-`n8n`
+Inicia n8n desde la terminal ejecutando `n8n`
 
 Luego, abre el panel en el navegador (http://localhost:5678) y registrate o ingresa con tu cuenta si ya tenes una.
 
-Importa el archivo `n8n/workflow.json` que esta en la carpeta /n8n de este proyecto.
+Importa el archivo `/n8n/workflow.json` que esta en la carpeta `/n8n` de este proyecto.
 
-**IMPORTANTE** -> Tenes que configurar el nodo "Envio del Backlog" (Nodo con ICONO DE UN SOBRE DE EMAIL)
+**IMPORTANTE** -> Tenes que configurar el nodo "**Envio del Backlog**" (Nodo con ICONO DE UN SOBRE DE EMAIL)
 
 - Proveedor: Gmail (u otro)
 - Usuario: tu correo electronico, será el que envíe el mail.
@@ -133,9 +136,11 @@ Importa el archivo `n8n/workflow.json` que esta en la carpeta /n8n de este proye
 
 **El destinatario se completa automáticamente desde el frontend, no hace falta modificarlo.**
 
-Si hiciste todo correcto (y yo también explicando esto..) debería estar todo funcionando para que pruebes la aplicación. Crea algunas columnas, cambiales el nombre, asignales tareas, desplazalas entre columnas, organiza tu dia. Luego, cuando termines, si queres tener toda esta información en tu poder, tan solo exportala con el botón de arriba a la derecha, ingresa tu mail personal y listo, en unos segundo estará llegando el reporte en formato CSV.
+Si hiciste todo correcto (y yo también explicando esto..) debería estar todo funcionando para que pruebes la aplicación. Crea algunas columnas, cambiales el nombre, asignales tareas, desplazalas entre columnas, organiza tu dia. 
 
-Para mas información podes leer el setup-instructions.md de la carpeta /n8n.
+Luego, cuando termines, si queres tener toda esta información en tu poder, tan solo exportala con el botón de arriba a la derecha, ingresa tu mail personal y listo, en unos segundo estará llegando el reporte en formato CSV.
+
+Para mas información podes leer el `setup-instructions.md` de la carpeta `/n8n`.
 
 ---
 
