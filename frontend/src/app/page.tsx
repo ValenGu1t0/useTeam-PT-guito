@@ -15,7 +15,7 @@ import { Column as ColumnType, Task as TaskType } from '../types';
 import Column from '@/components/Column';
 import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd';
 import { Button } from "@/components/ui/button";
-import { Moon, Sun, Plus } from "lucide-react";
+import { Moon, Sun, Plus, UploadCloud } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
   DropdownMenu,
@@ -26,13 +26,20 @@ import {
 import SocketProvider from "@/utils/SocketProvider";
 import Image from 'next/image';
 import { toast } from 'sonner';
+import { useState } from 'react';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 export default function Home() {
   
   const qc = useQueryClient();
   const { setTheme } = useTheme();
+  const [email, setEmail] = useState("");
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false); 
 
-  const { data: columns = [], isLoading } = useQuery<ColumnType[]>({
+  const { data: columns = [], isLoading: areColumnsLoading } = useQuery<ColumnType[]>({
     queryKey: ['columns'],
     queryFn: fetchColumns,
   });
@@ -75,7 +82,6 @@ export default function Home() {
   });
 
   // Mutación para mover una tarea con notificación
-  // Modifiqué el payload para incluir los nombres de las columnas en cada notificación
   const moveTaskM = useMutation({
     mutationFn: (payload: { 
       taskId: string; 
@@ -87,50 +93,37 @@ export default function Home() {
     }) => 
       moveTask(payload.taskId, { columnId: payload.columnId, index: payload.index }),
     onSuccess: (data, variables) => {
-      // data es la tarea actualizada del backend (podría no ser necesaria aquí)
-      // variables son los argumentos pasados a mutationFn
       qc.invalidateQueries({ queryKey: ['columns'] });
-      
-      // Acá esta la magia
       toast.success(`La tarea "${variables.taskTitle}" fue desplazada de "${variables.originalColumnName}" a "${variables.destinationColumnName}"`);
     },
     onError: (error, variables) => { 
-
-      // Revertimos el drag en caso de error
       qc.invalidateQueries({ queryKey: ['columns'] }); 
       console.error("Error al mover la tarea:", error);
-
-      // Mejor para depurar en caso de error también
       toast.error(`Error al mover la tarea "${variables.taskTitle}". Por favor, inténtalo de nuevo.`);
     }
   });
 
-
+  // Handler para el drag and drop
   const onDragEnd = async (result: DropResult) => {
 
     const { source, destination, draggableId } = result;
 
     if (!destination) return;
 
-    // Si la tarea no se movió dentro de la misma columna o a otra columna
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
-    // Obtener el estado actual de las columnas desde la caché para asegurar que no mutamos `columns` directamente
     const currentColumns = qc.getQueryData<ColumnType[]>(['columns']);
+
     if (!currentColumns) return;
 
-    // Encontrar la tarea y los nombres de las columnas ANTES de la actualización optimista
     const sourceColOriginal = currentColumns.find(col => col._id === source.droppableId);
     const destinationColOriginal = currentColumns.find(col => col._id === destination.droppableId);
     const movedTaskOriginal = sourceColOriginal?.tasks?.find(task => task._id === draggableId);
 
-
-    // Actualización optimista
     qc.setQueryData<ColumnType[] | undefined>(['columns'], old => {
 
       if (!old) return old;
       
-      // Creamos una copia profunda de las columnas para no mutar el estado directamente
       const newCols = old.map(c => ({ ...c, tasks: [...(c.tasks || [])] }));
       
       const srcCol = newCols.find(c => c._id === source.droppableId);
@@ -140,10 +133,8 @@ export default function Home() {
       
       const [moved] = srcCol.tasks!.splice(source.index, 1);
       
-      // Asegurarse de que 'moved' no sea undefined
       if (!moved) return old; 
 
-      // Actualizar optimisticamente el columnId de la tarea movida
       moved.columnId = destination.droppableId; 
       
       destCol.tasks!.splice(destination.index, 0, moved);
@@ -152,13 +143,10 @@ export default function Home() {
     });
 
     try {
-      // Usar la mutación para moveTask
       await moveTaskM.mutateAsync({ 
         taskId: draggableId, 
         columnId: destination.droppableId, 
         index: destination.index,
-
-        // Pasamos los nombres de las columnas y el título de la tarea obtenidos del estado original
         originalColumnName: sourceColOriginal?.name || 'Origen Desconocido', 
         destinationColumnName: destinationColOriginal?.name || 'Destino Desconocido',
         taskTitle: movedTaskOriginal?.title || 'Tarea Desconocida'
@@ -193,7 +181,49 @@ export default function Home() {
     deleteTaskM.mutate(taskId);
   };
 
-  if (isLoading) return <div className="flex justify-center items-center h-screen">Cargando...</div>;
+  // Handler del export CSV que triggerea el backend
+  const handleExport = async () => {
+
+    setIsExporting(true);
+
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+    
+    try {
+      if (!API_URL) {
+        throw new Error(
+          "La variable de entorno NEXT_PUBLIC_API_URL no está definida."
+        );
+      }
+
+      const response = await fetch(`${API_URL}/api/export/backlog`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Error al exportar los datos.");
+      }
+
+      const data = await response.json();
+      console.log("Exportación exitosa:", data);
+      toast.success("Se ha realizado la petición para el backlog.");
+      setEmail("");
+      setIsPopoverOpen(false);
+
+    } catch (error) {
+      console.error("Error al exportar:", error);
+      toast.error("Hubo un problema al intentar solicitar los datos.");
+      
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  if (areColumnsLoading) return <div className="flex justify-center items-center h-screen">Cargando...</div>;
 
   return (
     <SocketProvider>
@@ -210,27 +240,70 @@ export default function Home() {
               <span className="font-bold text-lg hidden sm:flex">MyKanBan</span>
             </div>
 
-            {/* Toggle del Tema */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                  <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                  <span className="sr-only">Cambia el tema</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setTheme("light")}>
-                  Claro
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("dark")}>
-                  Oscuro
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("system")}>
-                  Sistema
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Tema + Export del CSV */}
+            <div className="flex flex-row gap-4">
+
+              {/* Botón de Exportar */}
+              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <UploadCloud className="h-[1.2rem] w-[1.2rem]" />
+                    <span className="sr-only">Exportar datos</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80">
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <h4 className="font-medium leading-none">Exportar Tareas</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Ingresa tu email para recibir un backlog en formato CSV del panel actual
+                      </p>
+                    </div>
+                    <div className="grid gap-2">
+                      <div className="grid grid-cols-3 items-center gap-4">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          className="col-span-2 h-8"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                        />
+                      </div>
+                      <Button
+                        onClick={handleExport}
+                        disabled={isExporting || !email}
+                        className="w-full mt-2"
+                      >
+                        {isExporting ? "Enviando..." : "Enviar"}
+                      </Button>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {/* Toggle del Tema */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                    <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                    <span className="sr-only">Cambia el tema</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setTheme("light")}>
+                    Claro
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme("dark")}>
+                    Oscuro
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme("system")}>
+                    Sistema
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
 
           </div>
         </nav>

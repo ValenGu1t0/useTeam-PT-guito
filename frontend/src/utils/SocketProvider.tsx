@@ -14,6 +14,8 @@ export default function SocketProvider({ children }: { children: ReactNode }) {
         const socket = io(WS_URL, { autoConnect: true });
         /* console.log('🔌 Socket connected:', socket.id); */
 
+        // -------- Tasks --------
+
         // Evita duplicados cuando se crea una tarea - bug de doble card en otro navegador
         socket.on('taskCreated', (task: Task) => {
         
@@ -71,6 +73,7 @@ export default function SocketProvider({ children }: { children: ReactNode }) {
             toast.error('Tarea eliminada');
         });
 
+        // -------- Columnas --------
 
         socket.on('columnCreated', (col: Column) => {
             qc.invalidateQueries({ queryKey: ['columns'] });
@@ -87,6 +90,17 @@ export default function SocketProvider({ children }: { children: ReactNode }) {
                 old?.filter((c) => c._id !== columnId)
             );
             toast.error('Columna eliminada');
+        });
+
+        // -------- Export de N8N --------
+
+        // Escucha el retorno del back una vez termina el workflow de N8N
+        socket.on("exportSuccess", (data) => {
+            toast.success(data.message);
+        });
+
+        socket.on("exportError", (data) => {
+            toast.error(data.message);
         });
 
         // Limpieza de listeners cuando apagamos
