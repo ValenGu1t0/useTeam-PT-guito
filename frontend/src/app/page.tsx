@@ -195,7 +195,7 @@ export default function Home() {
         );
       }
 
-      const response = await fetch(`${API_URL}/api/export/backlog`, {
+      const response = await fetch(`${API_URL}api/export/backlog`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
